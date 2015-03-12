@@ -76,12 +76,16 @@ class Modman {
 					break;
 				case 'create':
 					$oCreate = new Modman_Command_Create();
+					$sDirectory = null;
+					if (isset($aParameters[2])) {
+						$sDirectory = $aParameters[2];
+					}
 					$iIncludeOffset = array_search('--include', $aParameters);
 					$bListHidden = array_search('--include-hidden', $aParameters);
 					if ($iIncludeOffset){
 						$oCreate->setIncludeFile($aParameters[$iIncludeOffset + 1]);
 					}
-					$oCreate->doCreate($bForce, $bListHidden);
+					$oCreate->doCreate($bForce, $sDirectory, $bListHidden);
 					break;
 				case 'clone':
 					if (!isset($aParameters[2])){
@@ -131,7 +135,7 @@ Following general commands are currently supported:
 - deploy (optional --force)
 - deploy-all (optional --force)
 - clean
-- create (optional --force, --include <include_file> and --include-hidden)
+- create (optional <dir> --force, --include <include_file> and --include-hidden)
 - clone (optional --force, --create-modman)
 
 Currently supported in modman-files:
@@ -954,10 +958,15 @@ class Modman_Command_Create {
 	 * @param bool $bListHidden = false, if true hidden files will be listed
 	 * @throws Exception on errors
 	 */
-	public function doCreate($bForce, $bListHidden = false){
+	public function doCreate($bForce, $sDirectory, $bListHidden = false){
 		$this->bListHidden = $bListHidden;
 
+		if($sDirectory){
+			chdir($sDirectory);
+		}
+
 		$aDirectoryStructure = $this->getDirectoryStructure(getcwd());
+
 		$this->generateLinkListFromDirectoryStructure($aDirectoryStructure);
 
 		if ($this->existsModmanFile() AND !$bForce){
