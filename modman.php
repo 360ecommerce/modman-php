@@ -1057,17 +1057,20 @@ class Modman_Command_Create
 
             if (!is_array($mElements) ) {
 
-//                var_dump($aPathElements);
+                $_fullPath = realpath(implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements);
 
-                $_fulldir = realpath(implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements);
-
-                if(is_dir($_fulldir) && $this->isDirectoryEmpty($_fulldir)){
+                if(is_dir($_fullPath) && $this->isDirectoryEmpty($_fullPath)){
                    continue;
                 }
-                else if (is_dir($_fulldir) || is_file($_fulldir) ){
+                else if (is_dir($_fullPath) || is_file($_fullPath) ){
                     
                     if(count($aPathElements) > 0 ) {
-                        $this->aLinks[] = implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements;
+                        $record = implode(
+                                DIRECTORY_SEPARATOR, $aPathElements) .
+                                DIRECTORY_SEPARATOR .
+                                $mElements;
+
+                        $this->aLinks[] = str_replace(' ', "\\\\", $record);
                     }
 
                 }
