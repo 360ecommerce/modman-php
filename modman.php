@@ -1037,12 +1037,27 @@ class Modman_Command_Create
      */
     private function generateLinkListFromDirectoryStructure($aDirectoryStructure, $aPathElements = array())
     {
+
         foreach ($aDirectoryStructure as $sDirectory => $mElements) {
-            if (!is_array($mElements)) {
-                $this->aLinks[] =
-                    (count($aPathElements) > 0 ? implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR : '') .
-                    $mElements;
-            } else {
+
+            if (!is_array($mElements) ) {
+
+//                var_dump($aPathElements);
+
+                $_fulldir = realpath(implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements);
+
+                if(is_dir($_fulldir) && $this->isDirectoryEmpty($_fulldir)){
+                   continue;
+                }
+                else if (is_dir($_fulldir) || is_file($_fulldir) ){
+                    
+                    if(count($aPathElements) > 0 ) {
+                        $this->aLinks[] = implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements;
+                    }
+
+                }
+            }
+            else {
                 $this->generateLinkListFromDirectoryStructure($mElements, array_merge($aPathElements, array($sDirectory)));
             }
         }
@@ -1078,15 +1093,20 @@ class Modman_Command_Create
         }
 
         $sOutput = '';
+
         foreach ($this->aLinks as $sLink) {
+
             $sLink = '/' . $sLink;
+
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $sLink = str_replace('\\', '/', $sLink);
             }
+
             $sOutput .= $sLink . ' ' . $sLink . PHP_EOL;
         }
 
         $rModmanFile = fopen($this->getModmanFilePath(), 'w');
+
         fputs($rModmanFile, $sOutput);
 
         // if include file defined, include it to the modman
@@ -1096,8 +1116,8 @@ class Modman_Command_Create
         }
 
         fclose($rModmanFile);
-
     }
+
 }
 
 class Modman_Command_Clone
