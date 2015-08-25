@@ -144,13 +144,14 @@ Following general commands are currently supported:
 - link (optional --force)
 - init (optional <basedir>)
 - repair
-- deploy (optional --force)
+- deploy <module> (optional --force)
 - deploy-all (optional --force)
 - clean
-- create (optional <dir> --force, --include <include_file> and --include-hidden)
+- create <module> (optional <dir> --force, --include <include_file> and --include-hidden)
 - clone (optional --force, --create-modman)
 - whitelist <file|dir>
 - blacklist <file|dir>
+- remove <module>
 
 Currently supported in modman-files:
 - symlinks (with wildcards)
@@ -896,25 +897,30 @@ class Modman_Command_Create
     /**
      * executes create command
      *
-     * @param bool $bForce - if true errors will be ignored
-     * @param bool $bListHidden = false, if true hidden files will be listed
+     * @param bool $force - if true errors will be ignored
+     * @param bool $directory - directory to create
+     * @param bool $listHidden = false, if true hidden files will be listed
      * @throws Exception on errors
      */
-    public function doCreate($bForce, $sDirectory, $bListHidden = false)
+    public function doCreate($force, $directory, $listHidden = false)
     {
-        $this->bListHidden = $bListHidden;
+        $this->bListHidden = $listHidden;
 
-        if ($sDirectory) {
-            chdir($sDirectory);
+        if ($directory && is_dir($directory)) {
+            chdir($directory);
+        }
+        else{
+            throw new Exception($directory . ' is not a directory');
         }
 
         $aDirectoryStructure = $this->getDirectoryStructure(getcwd());
 
         $this->generateLinkListFromDirectoryStructure($aDirectoryStructure);
 
-        if ($this->existsModmanFile() AND !$bForce) {
+        if ($this->existsModmanFile() && !$force) {
             throw new Exception('modman file ' . $this->getModmanFilePath() . ' already exists. Use --force');
-        } else {
+        }
+        else {
             $this->generateModmanFile();
         }
     }
