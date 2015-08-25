@@ -1,4 +1,6 @@
 <?php
+
+
 class Modman {
 
 	/**
@@ -105,17 +107,15 @@ class Modman {
                     'timeout' => 1,
                 )
             ));
+
             $sMessage = $oException->getMessage();
-            $sCowsay = @file_get_contents('http://cowsay.morecode.org/say?message=' . urlencode($sMessage) . '&format=text', false, $rCtx);
-            if ($sCowsay) {
-                echo $sCowsay;
-            } else {
-                echo '-----' . PHP_EOL;
-                echo 'An error occured:' . PHP_EOL;
-                echo $sMessage . PHP_EOL;
-                echo '-----';
-            }
+
+			echo '-----' . PHP_EOL;
+			echo 'An error occured:' . PHP_EOL;
+			echo $sMessage . PHP_EOL;
+			echo '-----';
 			echo PHP_EOL . PHP_EOL;
+
 			$this->printHelp();
 		}
 	}
@@ -167,17 +167,23 @@ class Modman_Command_All {
 	 * @throws Exception if modman directory does not exist
 	 */
 	private function getAllModules() {
+
 		if (!file_exists(Modman_Command_Init::MODMAN_DIRECTORY_NAME)) {
 			throw new Exception ('No modman directory found. You need to call "modman init" to create it.' . PHP_EOL
 				. 'Please consider the documentation below.', Modman::ERR_NOT_INITIALIZED);
 		}
+
 		$aDirEntries = scandir(Modman_Command_Init::MODMAN_DIRECTORY_NAME);
+
 		unset($aDirEntries[array_search('.', $aDirEntries)]);
 		unset($aDirEntries[array_search('..', $aDirEntries)]);
+
 		$iBaseDir = array_search(Modman_Command_Init::getBaseDirFile(), $aDirEntries);
+
 		if ($iBaseDir !== false) {
 			unset($aDirEntries[$iBaseDir]);
 		}
+
 		return $aDirEntries;
 	}
 
@@ -212,7 +218,9 @@ class Modman_Command_Init {
 	 * @param string
 	 */
 	public function doInit($sDirectory, $sBaseDir = null) {
+
 		$sModmanDirectory = $sDirectory . DIRECTORY_SEPARATOR . self::MODMAN_DIRECTORY_NAME;
+
 		if (!is_dir($sModmanDirectory)){
 			mkdir($sModmanDirectory);
 		}
@@ -223,6 +231,7 @@ class Modman_Command_Init {
 }
 
 class Modman_Command_Link {
+
 	private $sTarget;
 
 	/**
@@ -231,9 +240,11 @@ class Modman_Command_Link {
 	 * @param string $sTarget target to link
 	 */
 	public function __construct($sTarget) {
+
 		if (empty($sTarget)) {
 			throw new Exception('no source defined');
 		}
+
 		$this->sTarget = $sTarget;
 	}
 
@@ -244,11 +255,14 @@ class Modman_Command_Link {
 	 * @throws Exception if module is already linked
 	 */
 	public function createSymlinks($bForce = false) {
+
 		$sModuleName = basename($this->sTarget);
 		$sModuleSymlink = Modman_Command_Init::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $sModuleName;
+
 		if (is_link($sModuleSymlink)) {
 			throw new Exception($sModuleName . ' is already linked');
 		}
+
 		symlink($this->sTarget, $sModuleSymlink);
 
 		$oDeploy = new Modman_Command_Deploy($sModuleName);
@@ -257,6 +271,7 @@ class Modman_Command_Link {
 }
 
 class Modman_Command_Link_Line {
+
 	private $sTarget, $sSymlink;
 
 	/**
@@ -265,7 +280,9 @@ class Modman_Command_Link_Line {
 	 * @param array $aDirectories - key 0 = source; key 1 = target
 	 */
 	public function __construct($aDirectories) {
+
 		$this->sTarget = $aDirectories[0];
+
 		if (empty($aDirectories[1])) {
 			$this->sSymlink = $this->sTarget;
 		} else {
@@ -288,11 +305,14 @@ class Modman_Command_Link_Line {
 	 * @return string
 	 */
 	public function getSymlink() {
+
 		$sBaseDir = getcwd();
 		$sBaseDirFile = Modman_Command_Init::getBaseDirFile();
+
 		if (file_exists($sBaseDirFile)) {
 			$sBaseDir = file_get_contents($sBaseDirFile);
 		}
+
 		return $sBaseDir . DIRECTORY_SEPARATOR . $this->rtrimDS($this->sSymlink);
 	}
 
@@ -332,13 +352,16 @@ class Modman_Reader {
 	 * @param string $sDirectory - where to read
 	 */
 	public function __construct($sDirectory) {
+
 		$this->sModuleDirectory = $sDirectory;
 		$this->aFileContent = file($sDirectory . DIRECTORY_SEPARATOR . self::MODMAN_FILE_NAME);
 		$sFileName = $sDirectory . DIRECTORY_SEPARATOR . self::MODMAN_FILE_NAME;
+
 		if (!file_exists($sFileName)) {
 			throw new Exception ('The directory you would like to link has no modman file.' . PHP_EOL
 			     . 'Cannot link to this directory.', Modman::ERR_NO_MODMAN_FILE);
 		}
+
 		$this->aFileContent = file($sFileName);
 	}
 
@@ -365,25 +388,36 @@ class Modman_Reader {
 				// skip comments
 				continue;
 			}
+
 			$aParameters = $this->getParamsArray($sLine);
+
 			if (substr($sLine, 0, 7) == '@import') {
 				$this->doImport($aParameters);
-				continue;
-			} elseif (substr($sLine, 0, 6) == '@shell') {
-				unset($aParameters[0]);
-				$this->aShells[] = implode(' ', $aParameters);
-				continue;
-			} elseif (substr($sLine, 0, 1) == '@'){
-				echo 'Do not understand: ' . $sLine . PHP_EOL;
+
 				continue;
 			}
+			else if (substr($sLine, 0, 6) == '@shell') {
+				unset($aParameters[0]);
+				$this->aShells[] = implode(' ', $aParameters);
+
+				continue;
+			}
+			else if (substr($sLine, 0, 1) == '@'){
+				echo 'Do not understand: ' . $sLine . PHP_EOL;
+
+				continue;
+			}
+
 			if (strstr($sLine, '*')) {
+
 				foreach (glob($this->sModuleDirectory . DIRECTORY_SEPARATOR . $aParameters[0]) as $sFilename) {
 					$sRelativeFilename = substr($sFilename, strlen($this->sModuleDirectory . DIRECTORY_SEPARATOR));
 					$sRelativeTarget = str_replace(str_replace('*', '', $aParameters[0]), $aParameters[1], $sRelativeFilename);
 					$this->aObjects[] = new $sClassName(array($sRelativeFilename, $sRelativeTarget));
 				}
-			} else {
+
+			}
+			else {
 				$this->aObjects[] = new $sClassName($aParameters);
 			}
 		}
@@ -437,6 +471,7 @@ class Modman_Reader {
 }
 
 class Modman_Reader_Conflicts {
+
 	private $aConflicts = array();
 
 	/**
@@ -448,23 +483,26 @@ class Modman_Reader_Conflicts {
 	 */
 	public function checkForConflict($sSymlink, $sType, $sTarget = false) {
 		if (is_link($sSymlink)) {
-			if (
-				!(
-					$sType == 'link'
-					AND realpath($sSymlink) == realpath($sTarget)
-				)
-			) {
+
+			if ( !( $sType == 'link' && realpath($sSymlink) == realpath($sTarget) ) ) {
 				$this->aConflicts[$sSymlink] = 'link';
 			}
-		} elseif (file_exists($sSymlink)) {
+
+		}
+		else if (file_exists($sSymlink)) {
+
 			if (is_dir($sSymlink)) {
+
 				if ($sType == 'dir') {
 					return;
 				}
+
 				$this->aConflicts[$sSymlink] = 'dir';
-			} else {
+			}
+			else {
 				$this->aConflicts[$sSymlink] = 'file';
 			}
+
 		}
 	}
 
@@ -483,7 +521,9 @@ class Modman_Reader_Conflicts {
 	 * @return string
 	 */
 	public function getConflictsString() {
+
 		$sString = '';
+
 		foreach ($this->aConflicts as $sFilename => $sType) {
 			switch ($sType) {
 				case 'dir':
@@ -497,6 +537,7 @@ class Modman_Reader_Conflicts {
 					break;
 			}
 		}
+
 		return $sString;
 	}
 
@@ -504,12 +545,16 @@ class Modman_Reader_Conflicts {
 	 * removes a linked module
 	 */
 	public function cleanup() {
+
 		$oResourceRemover = new Modman_Resource_Remover();
+
 		foreach ($this->aConflicts as $sFilename => $sType) {
+
 			switch ($sType) {
 				case 'dir':
 					$oResourceRemover->doRemoveFolderRecursively($sFilename);
 					break;
+
 				case 'file':
 				case 'link':
 					$oResourceRemover->doRemoveResource($sFilename);
@@ -520,6 +565,7 @@ class Modman_Reader_Conflicts {
 }
 
 class Modman_Command_Deploy {
+
 	private $sModuleName;
 
 	/**
@@ -529,9 +575,11 @@ class Modman_Command_Deploy {
 	 * @throws Exception
 	 */
 	public function __construct($sModuleName) {
+
 		if (empty($sModuleName)) {
 			throw new Exception('please provide a module name to deploy');
 		}
+
 		$this->sModuleName = $sModuleName;
 	}
 
@@ -542,6 +590,7 @@ class Modman_Command_Deploy {
 	 * @throws Exception on error
 	 */
 	public function doDeploy($bForce = false) {
+
 		if ($this->sModuleName === Modman_Command_Init::MODMAN_BASEDIR_FILE) {
 			return;
 		}
@@ -552,6 +601,7 @@ class Modman_Command_Deploy {
 		$this->oReader = new Modman_Reader($sTarget);
 		$aLines = $this->oReader->getObjectsPerRow('Modman_Command_Link_Line');
 		$oConflicts = new Modman_Reader_Conflicts();
+
 		foreach ($aLines as $iLine => $oLine) {
 			/* @var $oLine Modman_Command_Link_Line */
 			if ($oLine->getTarget() AND $oLine->getSymlink()) {
@@ -564,6 +614,7 @@ class Modman_Command_Deploy {
 				unset($aLines[$iLine]);
 			}
 		}
+
 		if ($oConflicts->hasConflicts()) {
 			$sConflictsString = 'conflicts detected: ' . PHP_EOL .
 				$oConflicts->getConflictsString() . PHP_EOL;
