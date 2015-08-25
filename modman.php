@@ -100,6 +100,14 @@ class Modman
                     $oClone = new Modman_Command_Clone($aParameters[2], new Modman_Command_Create());
                     $oClone->doClone($bForce, $bCreateModman);
                     break;
+				case 'whitelist':
+					$whitelist = new Modman_Command_BlackAndWhitelist();
+					$whitelist->apply('whitelist', $aParameters[2]);
+					break;
+				case 'blacklist':
+					$blacklist = new Modman_Command_BlackAndWhitelist();
+					$blacklist->apply('blacklist', $aParameters[2]);
+					break;
                 default:
                     throw new Exception('command does not exist');
             }
@@ -141,6 +149,8 @@ Following general commands are currently supported:
 - clean
 - create <module> (optional <dir> --force, --include <include_file> and --include-hidden)
 - clone (optional --force, --create-modman)
+- whitelist <file|dir>
+- blacklist <file|dir>
 - remove <module>
 
 Currently supported in modman-files:
@@ -234,6 +244,11 @@ class Modman_Command_Init
         if (!is_null($sBaseDir)) {
             file_put_contents(self::getBaseDirFile(), $sBaseDir);
         }
+
+		//Create Blacklist and Whitelist files based on defaults
+		$whitelistBlacklist = new Modman_Command_BlackAndWhitelist();
+		$whitelistBlacklist->createFile('whitelist');
+		$whitelistBlacklist->createFile('blacklist');
     }
 
     public static function getBaseDirFile()
@@ -1338,8 +1353,85 @@ class Modman_Resource_Remover
     {
         return count(scandir($sDirectoryPath)) == 2;
     }
+}
+
+
+class Modman_Command_BlackAndWhitelist {
+
+	const MODMAN_DIRECTORY_NAME = '.modman';
+
+	public function __construct() {
+		return $this;
+	}
+
+	/**
+	 * Apply file to white or blacklist
+	 *
+	 * @param string $filename
+	 * @throws Exception
+	 */
+	public function apply($type, $filename)
+	{
+		if (empty($filename)) {
+			throw new Exception('please provide a file or directory to whitelist');
+		}
+
+		if(is_dir($filename) || is_file($filename)) {
+
+			$filehandler = fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type, 'w+' );
+
+			if( strpos(file_get_contents($filename), $filename) === false) {
+				fwrite($filehandler, $filename);
+			}
+
+			fclose($filehandler);
+
+		} else {
+			throw new Exception('Specify a valid and existing file or directory');
+		}
+	}
+
+
+	public function createFile($type) {
+
+		if(!empty($type)) {
+			unlink(self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type);
+
+			$filehandler = fopen(self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type, 'w+');
+
+			if ($type == 'whitelist') {
+				$files = $this->getWhilelistFiles();
+			} else if($type == 'blacklist') {
+				$files = $this->getBlacklistFiles();
+			}
+
+			foreach($files as $file) {
+				fwrite($filehandler, $file);
+			}
+			fclose($filehandler);
+		}
+	}
+
+
+	private function getWhilelistFiles() {
+		return array(
+			'.bowerrc'
+		);
+	}
+
+
+	private function getBlacklistFiles() {
+		return array(
+			'Gruntfile.js',
+			'app/etc/local.xml',
+			'.htaccess'
+		);
+	}
 
 }
+
+
+
 
 $oModman = new Modman();
 $oModman->run($argv);
