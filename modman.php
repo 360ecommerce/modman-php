@@ -1070,7 +1070,7 @@ class Modman_Command_Create
                                 DIRECTORY_SEPARATOR .
                                 $mElements;
 
-                        $this->aLinks[] = str_replace(' ', "\\\\", $record);
+                        $this->aLinks[] = $record;
                     }
 
                 }
