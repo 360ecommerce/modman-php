@@ -630,7 +630,7 @@ class Modman_Command_Deploy
     public function doDeploy($bForce = false)
     {
 
-        if ($this->sModuleName === Modman_Command_Init::MODMAN_BASEDIR_FILE) {
+        if (in_array($this->sModuleName, array('whitelist', 'blacklist', '.DS_STORE', Modman_Command_Init::MODMAN_BASEDIR_FILE))) {
             return;
         }
 
