@@ -35,7 +35,7 @@ class Modman
                     if (!isset($aParameters[2])) {
                         throw new Exception('please specify target directory');
                     }
-                    $sLinkPath = realpath($aParameters[2]);
+                    $sLinkPath = realpath(trim($aParameters[2]));
                     if (!$sLinkPath) {
                         throw new Exception('Link path is invalid!');
                     }
@@ -47,7 +47,7 @@ class Modman
                     $sCwd = getcwd();
                     $sBaseDir = null;
                     if (isset($aParameters[2])) {
-                        $sBaseDir = $aParameters[2];
+                        $sBaseDir = trim($aParameters[2]);
                     }
                     $sInitPath = realpath($sCwd);
                     $oInit = new Modman_Command_Init();
@@ -57,7 +57,7 @@ class Modman
                     if (!isset($aParameters[2])) {
                         throw new Exception('please specify module name');
                     }
-                    $oDeploy = new Modman_Command_Deploy($aParameters[2]);
+                    $oDeploy = new Modman_Command_Deploy(trim($aParameters[2]));
                     $oDeploy->doDeploy($bForce);
                     echo $aParameters[2] . ' has been deployed under ' . getcwd() . PHP_EOL;
                     break;
@@ -76,14 +76,14 @@ class Modman
                     if (!isset($aParameters[2])) {
                         throw new Exception('please specify module name');
                     }
-                    $oRemove = new Modman_Command_Remove($aParameters[2]);
+                    $oRemove = new Modman_Command_Remove(trim($aParameters[2]));
                     $oRemove->doRemove($bForce);
                     break;
                 case 'create':
                     $oCreate = new Modman_Command_Create();
                     $sDirectory = null;
                     if (isset($aParameters[2])) {
-                        $sDirectory = $aParameters[2];
+                        $sDirectory = trim($aParameters[2]);
                     }
                     $iIncludeOffset = array_search('--include', $aParameters);
                     $bListHidden = array_search('--include-hidden', $aParameters);
@@ -97,27 +97,21 @@ class Modman
                         throw new Exception('Please specify git repository URL');
                     }
                     $bCreateModman = array_search('--create-modman', $aParameters);
-                    $oClone = new Modman_Command_Clone($aParameters[2], new Modman_Command_Create());
+                    $oClone = new Modman_Command_Clone(trim($aParameters[2]), new Modman_Command_Create());
                     $oClone->doClone($bForce, $bCreateModman);
                     break;
 				case 'whitelist':
 					$whitelist = new Modman_Command_BlackAndWhitelist();
-					$whitelist->apply('whitelist', $aParameters[2]);
+					$whitelist->apply('whitelist', trim($aParameters[2]));
 					break;
 				case 'blacklist':
 					$blacklist = new Modman_Command_BlackAndWhitelist();
-					$blacklist->apply('blacklist', $aParameters[2]);
+					$blacklist->apply('blacklist', trim($aParameters[2]));
 					break;
                 default:
                     throw new Exception('command does not exist');
             }
         } catch (Exception $oException) {
-            // set small timeout, no big delays for a funny feature
-            $rCtx = stream_context_create(array('http' =>
-                array(
-                    'timeout' => 1,
-                )
-            ));
 
             $sMessage = $oException->getMessage();
 
@@ -636,7 +630,7 @@ class Modman_Command_Deploy
     public function doDeploy($bForce = false)
     {
 
-        if ($this->sModuleName === Modman_Command_Init::MODMAN_BASEDIR_FILE) {
+        if (in_array($this->sModuleName, array('whitelist', 'blacklist', '.DS_STORE', Modman_Command_Init::MODMAN_BASEDIR_FILE))) {
             return;
         }
 
