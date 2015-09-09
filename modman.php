@@ -54,12 +54,18 @@ class Modman
                     $oInit->doInit($sInitPath, $sBaseDir);
                     break;
                 case 'deploy':
+
                     if (!isset($aParameters[2])) {
                         throw new Exception('please specify module name');
                     }
-                    $oDeploy = new Modman_Command_Deploy(trim($aParameters[2]));
+
+                    $_project = end(explode('/', rtrim($aParameters[2], '/')));
+
+                    $oDeploy = new Modman_Command_Deploy($_project);
                     $oDeploy->doDeploy($bForce);
+
                     echo $aParameters[2] . ' has been deployed under ' . getcwd() . PHP_EOL;
+
                     break;
                 case 'repair':
                     $bForce = true;
