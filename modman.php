@@ -1391,7 +1391,7 @@ class Modman_Command_BlackAndWhitelist {
 			$filehandler = fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type, 'w+' );
 
 			if( strpos(file_get_contents($filename), $filename) === false) {
-				fwrite($filehandler, $filename);
+                fputs($filehandler, $filename . PHP_EOL);
 			}
 
 			fclose($filehandler);
@@ -1416,7 +1416,7 @@ class Modman_Command_BlackAndWhitelist {
 			}
 
 			foreach($files as $file) {
-				fwrite($filehandler, $file);
+                fputs($filehandler, $file . PHP_EOL);
 			}
 			fclose($filehandler);
 		}
