@@ -1082,12 +1082,30 @@ class Modman_Command_Create
      */
     private function generateLinkListFromDirectoryStructure($aDirectoryStructure, $aPathElements = array())
     {
+
         foreach ($aDirectoryStructure as $sDirectory => $mElements) {
-            if (!is_array($mElements)) {
-                $this->aLinks[] =
-                    (count($aPathElements) > 0 ? implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR : '') .
-                    $mElements;
-            } else {
+
+            if (!is_array($mElements) ) {
+
+                $_fullPath = realpath(implode(DIRECTORY_SEPARATOR, $aPathElements) . DIRECTORY_SEPARATOR . $mElements);
+
+                if(is_dir($_fullPath) && $this->isDirectoryEmpty($_fullPath)){
+                   continue;
+                }
+                else if (is_dir($_fullPath) || is_file($_fullPath) ){
+                    
+                    if(count($aPathElements) > 0 ) {
+                        $record = implode(
+                                DIRECTORY_SEPARATOR, $aPathElements) .
+                                DIRECTORY_SEPARATOR .
+                                $mElements;
+
+                        $this->aLinks[] = $record;
+                    }
+
+                }
+            }
+            else {
                 $this->generateLinkListFromDirectoryStructure($mElements, array_merge($aPathElements, array($sDirectory)));
             }
         }
@@ -1123,15 +1141,20 @@ class Modman_Command_Create
         }
 
         $sOutput = '';
+
         foreach ($this->aLinks as $sLink) {
+
             $sLink = '/' . $sLink;
+
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                 $sLink = str_replace('\\', '/', $sLink);
             }
+
             $sOutput .= $sLink . ' ' . $sLink . PHP_EOL;
         }
 
         $rModmanFile = fopen($this->getModmanFilePath(), 'w');
+
         fputs($rModmanFile, $sOutput);
 
         // if include file defined, include it to the modman
@@ -1141,8 +1164,8 @@ class Modman_Command_Create
         }
 
         fclose($rModmanFile);
-
     }
+
 }
 
 class Modman_Command_Clone
