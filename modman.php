@@ -874,6 +874,8 @@ class Modman_Command_Create
 
     const MAGENTO_MODULE_CODE_RELATIVE_PATH_DEPTH = 4;
     const MAGENTO_MODULE_DESIGN_RELATIVE_PATH_DEPTH = 7;
+    const MODMAN_DIRECTORY_NAME = '.modman';
+
     private $aLinks = array();
     private $sIncludeFilePath;
     private $bListHidden = false;
@@ -939,7 +941,7 @@ class Modman_Command_Create
         foreach ($aCurrentDirectoryListing as $sNode) {
             $sDirectoryPathToCheck = $sDirectoryPath . DIRECTORY_SEPARATOR . $sNode;
             if ((!$this->isHiddenNode($sNode) OR $this->bListHidden)
-                AND !in_array($sNode, array('.', '..', 'modman', 'README', 'README.md', 'composer.json', 'atlassian-ide-plugin.xml'))
+                AND !in_array($sNode, array_merge( $this->getBlacklist(), array('.', '..', 'modman', 'README', 'README.md', 'composer.json', 'atlassian-ide-plugin.xml') ) )
             ) {
                 if (is_dir($sDirectoryPathToCheck)
                     AND !$this->isDirectoryEmpty($sDirectoryPathToCheck)
@@ -951,6 +953,34 @@ class Modman_Command_Create
                 }
             }
         }
+
+        $this->appendWhitelist($aResult);
+
+        return $aResult;
+    }
+
+    private function appendWhitelist(&$aResult) {
+
+        $filehandler = fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . 'whitelist', 'r', FILE_USE_INCLUDE_PATH );
+
+        while (($buffer = fgets($filehandler, 4096)) !== false) {
+            $aResult[]  =   $buffer;
+        }
+        fclose($filehandler);
+
+        return $aResult;
+    }
+
+    private function getBlacklist() {
+
+        $aResult        =   array();
+        $filehandler    =   fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . 'blacklist', 'r', FILE_USE_INCLUDE_PATH );
+
+        while (($buffer = fgets($filehandler, 4096)) !== false) {
+            $aResult[]  =   $buffer;
+        }
+        fclose($filehandler);
+
         return $aResult;
     }
 
