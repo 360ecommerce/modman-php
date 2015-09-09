@@ -1411,10 +1411,10 @@ class Modman_Command_BlackAndWhitelist {
 
 		if(is_dir($filename) || is_file($filename)) {
 
-			$filehandler = fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type, 'w+' );
+			$filehandler = fopen( self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type, 'a+' );
 
-			if( strpos(file_get_contents($filename), $filename) === false) {
-                fputs($filehandler, $filename . PHP_EOL);
+			if( strpos(file_get_contents(self::MODMAN_DIRECTORY_NAME . DIRECTORY_SEPARATOR . $type), $filename) === false) {
+                fwrite($filehandler, $filename . PHP_EOL);
 			}
 
 			fclose($filehandler);
